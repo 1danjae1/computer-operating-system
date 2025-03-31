@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define NUM_THREADS 4
+#define RANGE 10000
+
+// (2) 전역 변수 sum[4] 0으로 초기화
+int sum[NUM_THREADS] = {0, 0, 0, 0};
+
+// (3) 스레드로 실행할 함수 runner
+void* runner(void* param) {
+    int start = atoi((char*)param);       // 문자열 → 정수 변환
+    int end = start + RANGE - 1;
+    int index = (start - 1) / RANGE;      // sum 배열 인덱스 계산
+
+    for (int i = start; i <= end; i++) {
+        sum[index] += i;
+    }
+
+    pthread_exit(0);
+}
+
+int main() {
+    pthread_t tid[NUM_THREADS];
+
+    // (4) 각 스레드 시작값 (문자열)
+    char* start_values[NUM_THREADS] = {
+        "1", "10001", "20001", "30001"
+    };
+
+    // 4개의 스레드 생성
+    for (int i = 0; i < NUM_THREADS; i++) {
+        // prthread_create(...) 형태로 주석 추가 요청 반영
+        // 예: prthread_create(..., ..., runner, "1"); // 1에서 10000까지 합 구하기
+        pthread_create(&tid[i], NULL, runner, (void*)start_values[i]);
+    }
+
+    // (5) 모든 스레드가 종료되기를 기다림
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(tid[i], NULL);
+    }
+
+    // sum 배열의 합 구하기
+    int total = 0;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        total += sum[i];
+    }
+
+    printf("1에서 40000까지 4개의 스레드가 계산한 총 합은 %d\n", total);
+
+    return 0;
+}
